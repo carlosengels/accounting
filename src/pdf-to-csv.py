@@ -17,9 +17,9 @@ if match:
     account_activity = match.group(1).strip()
 else:
     account_activity = None
-lines = account_activity.split("\n")
-header = "Date of Transaction,Description,$ Amount,Category,Sub-Category"
-content = header + "\n"
+
+account_activity_lines_list = account_activity.split("\n")
+account_activity_header_csv = "Date of Transaction,Description,$ Amount,Category,Sub-Category\n"
 
 #Get date from PDF
 page = reader.pages[0]
@@ -47,17 +47,18 @@ def categorize (transaction) :
     return ""
 
 #Convert lines to CSV format
-for line in lines:
-    pattern = r'^(\d{1,2}/\d{1,2})\s+(.+?)\s+(-?\d+\.\d{2})$'
-    match = re.match(pattern, line)
-    if match:
-        transaction_date, description, amount = match.groups()
-        description = redact(description)
-        category = categorize(description)
-        statement = transaction_date + "," + description + "," + amount + "," + category + "\n"
-        # print(statement) debug
-        content += statement
-
+def convert_account_activity_content_to_csv (list_of_activity_lines) :
+    converted_activity_line_str = ""
+    for line in list_of_activity_lines:
+        pattern = r'^(\d{1,2}/\d{1,2})\s+(.+?)\s+(-?\d+\.\d{2})$'
+        match = re.match(pattern, line)
+        if match:
+            transaction_date, description, amount = match.groups()
+            description = redact(description)
+            category = categorize(description)
+            statement = transaction_date + "," + description + "," + amount + "," + category + "\n"
+            converted_activity_line_str += statement
+    return converted_activity_line_str
 
 #Write to csv
 def write_to_csv (pdf_content_str, statement_end_date_str) :
@@ -68,7 +69,9 @@ def write_to_csv (pdf_content_str, statement_end_date_str) :
 
 def main():
     logging.info("Starting main function")
-    write_to_csv(content, statement_end_date)
+    account_activity_content_csv = convert_account_activity_content_to_csv(account_activity_lines_list)
+    account_activity_complete_csv = account_activity_header_csv + account_activity_content_csv
+    write_to_csv(account_activity_complete_csv, statement_end_date)
 
 if __name__ == "__main__":
     logging.basicConfig(
