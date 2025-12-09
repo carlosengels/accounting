@@ -2,6 +2,7 @@ from pypdf import PdfReader
 import pandas as pd
 from io import StringIO
 import re
+import logging
 
 #Read text from PDF
 reader = PdfReader("../artifacts/Statements.pdf")
@@ -59,8 +60,19 @@ for line in lines:
 
 
 #Write to csv
-filename = "../artifacts/monthly_statement_{date_str}.csv".format(date_str=statement_end_date)
-df = pd.read_csv(StringIO(content))
-df.to_csv(filename, index=False)
-print("Transaction activity saved to {filename}".format(filename=filename))
+def write_to_csv (pdf_content_str, statement_end_date_str) :
+    filename = "../artifacts/monthly_statement_{date_str}.csv".format(date_str=statement_end_date_str)
+    df = pd.read_csv(StringIO(pdf_content_str))
+    df.to_csv(filename, index=False)
+    logging.info("Transaction activity saved to {filename}".format(filename=filename))
 
+def main():
+    logging.info("Starting main function")
+    write_to_csv(content, statement_end_date)
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,  # Set minimum log level
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
+    main()
